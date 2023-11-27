@@ -1,4 +1,5 @@
 package hotelTest;
+
 import javax.swing.*;
 import java.awt.*;
 import java.awt.event.ActionEvent;
@@ -13,6 +14,7 @@ public class LoginWhitGuest extends JPanel {
     private JTextField usernameField;
     private JPasswordField passwordField;
     JFrame frame;
+
     public LoginWhitGuest() {
         JPanel panel = new JPanel();
         panel.setLayout(new GridBagLayout());
@@ -33,14 +35,13 @@ public class LoginWhitGuest extends JPanel {
         gbc.gridx = 0;
         gbc.gridy = 0;
         gbc.gridwidth = 2;
-        panel.add(header,gbc);
-        
+        panel.add(header, gbc);
+
         gbc.gridwidth = 1;
         gbc.gridx = 0;
         gbc.gridy = 1;
-   
-        panel.add(usernameLabel, gbc);
 
+        panel.add(usernameLabel, gbc);
 
         gbc.gridx = 1;
         gbc.gridy = 1;
@@ -63,7 +64,8 @@ public class LoginWhitGuest extends JPanel {
         add(panel, BorderLayout.CENTER);
         setVisible(true);
     }
- // Modify the handleLogin method
+
+
     private void handleLogin() {
         String username = usernameField.getText();
         char[] passwordChars = passwordField.getPassword();
@@ -82,11 +84,11 @@ public class LoginWhitGuest extends JPanel {
                 ResultSet resultSet = preparedStatement.executeQuery();
 
                 if (resultSet.next()) {
-                    int userId = resultSet.getInt("id"); // Assuming the column name is "id"
-                    JOptionPane.showMessageDialog(this, "Login Successful. User ID: " + userId);
+                    int guestId = resultSet.getInt("guest_id"); 
+                    JOptionPane.showMessageDialog(this, "Login Successful. Guest ID: " + guestId);
 
-                    // Pass the user ID to another component, e.g., GuestPage
-                    GuestPage guestPage = new GuestPage(userId);
+                    GuestPage guestPage = new GuestPage(guestId);
+                   
                 } else {
                     JOptionPane.showMessageDialog(this, "Invalid username or password");
                 }
@@ -96,7 +98,13 @@ public class LoginWhitGuest extends JPanel {
         }
     }
 
-
     public static void main(String[] args) {
+  
+         JFrame frame = new JFrame("Login");
+         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+         frame.getContentPane().add(new LoginWhitGuest());
+         frame.setSize(400, 300);
+         frame.setLocationRelativeTo(null);
+         frame.setVisible(true);
     }
 }

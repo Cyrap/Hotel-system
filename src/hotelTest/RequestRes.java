@@ -44,7 +44,7 @@ public class RequestRes extends JPanel {
                     Vector<Object> row = new Vector<>();
                     for (int i = 1; i <= columnCount; i++) {
                         row.add(resultSet.getObject(i));
-                    } 
+                    }
                     row.add("Decline");
                     row.add("Approve");
                     data.add(row);
@@ -52,11 +52,11 @@ public class RequestRes extends JPanel {
                 DefaultTableModel tableModel = new DefaultTableModel(data, columnNames) {
                     @Override
                     public boolean isCellEditable(int row, int column) {
-                        return column == getColumnCount() - 1;
+                        return column == getColumnCount() - 1 || column == getColumnCount() - 2;
                     }
                 };
                 dataTable.setModel(tableModel);
-                addButtonColumn(dataTable, tableModel.getColumnCount() - 1);
+                addButtonColumns(dataTable, tableModel.getColumnCount() - 1, tableModel.getColumnCount() - 2);
             }
         } catch (ClassNotFoundException | SQLException ex) {
             System.err.println("Error: " + ex.getMessage());
@@ -71,10 +71,12 @@ public class RequestRes extends JPanel {
         }
     }
 
-    private void addButtonColumn(JTable table, int column) {
-        TableColumn buttonColumn = table.getColumnModel().getColumn(column);
-        buttonColumn.setCellRenderer(new ButtonRenderer());
-        buttonColumn.setCellEditor(new ButtonEditor(new JCheckBox()));
+    private void addButtonColumns(JTable table, int... columns) {
+        for (int column : columns) {
+            TableColumn buttonColumn = table.getColumnModel().getColumn(column);
+            buttonColumn.setCellRenderer(new ButtonRenderer());
+            buttonColumn.setCellEditor(new ButtonEditor(new JCheckBox()));
+        }
     }
 
     private class ButtonRenderer extends JButton implements TableCellRenderer {
@@ -110,7 +112,7 @@ public class RequestRes extends JPanel {
                 button.setBackground(UIManager.getColor("Button.background"));
             }
 
-            // Set the default label to "Approve" or "Decline"
+     
             String label = (value == null) ? "Approve" : value.toString();
 
             button.setText(label);
@@ -122,10 +124,10 @@ public class RequestRes extends JPanel {
         public Object getCellEditorValue() {
             if (isPushed) {
                 int selectedRow = dataTable.getSelectedRow();
-                int idToApproveOrDecline = (int) dataTable.getModel().getValueAt(selectedRow, 0);
+                int idToHandle = (int) dataTable.getModel().getValueAt(selectedRow, 0);
 
                 if (button.getText().equals("Approve")) {
-                    approveRequest(idToApproveOrDecline);
+                    approveRequest(idToHandle);
                 } else if (button.getText().equals("Decline")) {
                     int option = JOptionPane.showConfirmDialog(
                             null,
@@ -134,11 +136,11 @@ public class RequestRes extends JPanel {
                             JOptionPane.YES_NO_OPTION
                     );
                     if (option == JOptionPane.YES_OPTION) {
-                        declineRequest(idToApproveOrDecline);
+                        declineRequest(idToHandle);
                     }
                 }
 
-                // Fetch data again after update
+      
                 loadData();
             }
             isPushed = false;
@@ -151,17 +153,16 @@ public class RequestRes extends JPanel {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "");
 
-                // Get roomId and guestId from the requests table
+
                 int roomId = getRoomIdByRequestId(con, idToApprove);
                 int guestId = getGuestIdByRequestId(con, idToApprove);
-                System.out.println(roomId + guestId);
-                // Update the reservation table
+
+
                 updateReservation(con, guestId, roomId);
 
-                // Update the availability in the rooms table
+       
                 updateRoomAvailability(con, roomId, false);
 
-                // Update the status to 'approved' in the database
                 String updateQuery = "UPDATE requests SET status = 'approved' WHERE id = ?";
                 try (PreparedStatement preparedStatement = con.prepareStatement(updateQuery)) {
                     preparedStatement.setInt(1, idToApprove);
@@ -169,9 +170,9 @@ public class RequestRes extends JPanel {
                 }
 
             } catch (ClassNotFoundException | SQLException ex) {
-                JOptionPane.showMessageDialog(null, "Error approvinvvvvvvvvvvvvvvvg request: " + ex.getMessage());
+                JOptionPane.showMessageDialog(null, "Error approving request: " + ex.getMessage());
             } finally {
-                // Close the connection
+
                 try {
                     if (con != null) {
                         con.close();
@@ -188,7 +189,7 @@ public class RequestRes extends JPanel {
                 Class.forName("com.mysql.cj.jdbc.Driver");
                 con = DriverManager.getConnection("jdbc:mysql://localhost:3306/hotel", "root", "");
 
-                // Update the status to 'declined' in the database
+       
                 String updateQuery = "UPDATE requests SET status = 'declined' WHERE id = ?";
                 try (PreparedStatement preparedStatement = con.prepareStatement(updateQuery)) {
                     preparedStatement.setInt(1, idToDecline);
@@ -198,7 +199,7 @@ public class RequestRes extends JPanel {
             } catch (ClassNotFoundException | SQLException ex) {
                 JOptionPane.showMessageDialog(null, "Error declining request: " + ex.getMessage());
             } finally {
-                // Close the connection
+
                 try {
                     if (con != null) {
                         con.close();
@@ -238,12 +239,10 @@ public class RequestRes extends JPanel {
                     preparedStatement.executeUpdate();
                 }
             } catch (SQLException ex) {
-                ex.printStackTrace();
-                JOptionPane.showMessageDialog(null, "Error WHEN TRYING POST RESERVATION request: " + ex.getMessage());
-                throw ex; // rethrow the exception
+                JOptionPane.showMessageDialog(null, "Error when trying to post reservation request: " + ex.getMessage());
+                throw ex;
             }
         }
-
 
         private void updateRoomAvailability(Connection con, int roomId, boolean isAvailable) throws SQLException {
             String updateRoomAvailabilityQuery = "UPDATE rooms SET Availability = ? WHERE id = ?";
